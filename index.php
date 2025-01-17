@@ -2,7 +2,7 @@
 <style>
     .signup-button {
         text-decoration: none;
-        border-radius: 3vw;
+        border-radius: 2vw;
         border: solid;
         color: rgb(122, 135, 100);
         width: 20vw;
@@ -35,8 +35,8 @@
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         transition: color 1s, background-color 1s;
         position: absolute;
-        bottom: 350;
-        rotate: 80deg;
+        bottom: 500;
+        rotate: 40deg;
         left: 300;
     }
 
@@ -44,7 +44,7 @@
         border: solid;
         width: 2vw;
         height: 2vw;
-        border-radius: 2vw;
+        border-radius: 1vw;
         border-color: black;
         border-width: 0.1vw;
         display: flex;
@@ -53,7 +53,7 @@
         font-size: 1.5vw;
         position: absolute;
         bottom: 450;
-        rotate: 80deg;
+        rotate: 44deg;
         left: 500;
     }
 
@@ -102,46 +102,55 @@
         let angleRatio = getRatio(elAngleFull);
         let elAngle = getAngle(elAngleFull);
         let halfCrosslineLen = Math.sqrt(Math.pow(elHeightDim/2, 2)+Math.pow(elWidth/2, 2));
+        let radiusLength = (Math.sin((45+elAngle)*Math.PI/180)*Math.sqrt(2)*elRadius-elRadius);
 
         let betaAngle = Math.atan((elHeightDim/2)/(elWidth/2))*180/Math.PI;
-        let trigoLength = Math.cos((90-(elAngle+betaAngle))*Math.PI/180)*halfCrosslineLen - elHeightDim/2 - (Math.sqrt(2)*elRadius - elRadius)*angleRatio;
+        let trigoLength = Math.cos((90-(elAngle+betaAngle))*Math.PI/180)*halfCrosslineLen - elHeightDim/2;
         let tetiva = 2*halfCrosslineLen*Math.sin((elAngle/2)*Math.PI/180);
         let diff = Math.sqrt(Math.pow(tetiva, 2) - Math.pow((trigoLength), 2));
         let afterFallPos = elLeft - diff;
 
         const acc = 9.8;
-        let mass = 10;
-        let power = mass*acc;
         
         let currTime = 0;
         let currHeight = 0;
         let angle = elAngleFull;
         let amp = 1;
+        let hiddenPart = trigoLength;
+        let fallen = false;
 
-        let move = setInterval(function(){
-            let hiddenPart = trigoLength ;
+        let fall = setInterval(function(){
             currHeight = elHeight - 0.5*acc*currTime*currTime;
             el.style.bottom = currHeight;
             currTime += 0.1;
-            if (currHeight < hiddenPart) {
-                el.style.bottom = hiddenPart;
-                currHeight = hiddenPart;
-                elHeight = currHeight;
-                el.style.transformOrigin = '100% 100%';
-                el.style.left = afterFallPos;
+            if (currHeight < hiddenPart - radiusLength) {
+                el.style.rotate = 0+'deg';
                 el.style.bottom = 0;
-                // clearInterval(move);
+                el.style.left = afterFallPos;
+                el.style.transformOrigin = '100% 100%';
+                el.style.rotate = elAngle+'deg';
+                el.style.bottom = - radiusLength;
+                fallen = true;
+                clearInterval(fall);
             }
-            if (currHeight == hiddenPart && elAngleFull - angle < elAngleFull) {
-                if (angle-amp < 0) {
-                    el.style.rotate = 0+'deg';
-                    return;
+        },10)
+        
+        let ratio = radiusLength/angle;
+        let rotate = setInterval(function(){
+            if (fallen) {
+                if (angle > 0) {
+                    amp+=0.2;
+                    if (angle-amp < 0) {
+                        el.style.rotate = 0+'deg';
+                        el.style.bottom = 0;
+                        return;
+                    }
+                    angle -= amp;
+                    let up = (Math.sin((45+angle)*Math.PI/180)*Math.sqrt(2)*elRadius-elRadius);
+                    el.style.rotate = angle+'deg';
+                    el.style.bottom = -up;
                 }
-                amp+=0.2;
-                angle -= amp;
-                el.style.rotate = angle+'deg';
             }
-            
         },10)
     }
 
