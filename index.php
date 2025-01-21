@@ -22,7 +22,7 @@
 
     .login-button {
         text-decoration: none;
-        border-radius: 1vw;
+        border-radius: 2.5vw;
         border: solid;
         color: rgb(133, 131, 238);
         width: 14vw;
@@ -36,15 +36,15 @@
         transition: color 1s, background-color 1s;
         position: absolute;
         bottom: 500;
-        rotate: 40deg;
+        rotate: 80deg;
         left: 300;
     }
 
     .or {
         border: solid;
-        width: 2vw;
-        height: 2vw;
-        border-radius: 1vw;
+        width: 6vw;
+        height: 6vw;
+        border-radius: 3vw;
         border-color: black;
         border-width: 0.1vw;
         display: flex;
@@ -53,8 +53,8 @@
         font-size: 1.5vw;
         position: absolute;
         bottom: 450;
-        rotate: 44deg;
-        left: 500;
+        rotate: 80deg;
+        left: 1000;
     }
 
     .login-button:hover {
@@ -88,79 +88,93 @@
 
 <script>
     fall("login");
-    fall("or");
+    fall("or" , true);
     fall("signup");
 
-    function fall (elementName) {
+    function fall (elementName, makeBall = false) {
         let el = document.getElementById(elementName);
         let elHeight = parseInt(window.getComputedStyle(el, null).getPropertyValue("bottom"));
         let elAngleFull = parseInt(window.getComputedStyle(el, null).getPropertyValue("rotate"));
-        let elRadius = parseInt(window.getComputedStyle(el, null).getPropertyValue("border-radius"));
         let elWidth = parseInt(window.getComputedStyle(el, null).getPropertyValue("width"));
         let elHeightDim = parseInt(window.getComputedStyle(el, null).getPropertyValue("height"));
+        let elRadius = parseInt(window.getComputedStyle(el, null).getPropertyValue("border-radius")) > elHeightDim/2 ? elHeightDim/2 : parseInt(window.getComputedStyle(el, null).getPropertyValue("border-radius"));
         let elLeft = parseInt(window.getComputedStyle(el, null).getPropertyValue("left"));
-        let angleRatio = getRatio(elAngleFull);
+        let elRight = parseInt(window.getComputedStyle(el, null).getPropertyValue("right"));
+        let elBorderWidth = parseInt(window.getComputedStyle(el, null).getPropertyValue("border-width"));
         let elAngle = getAngle(elAngleFull);
-        let halfCrosslineLen = Math.sqrt(Math.pow(elHeightDim/2, 2)+Math.pow(elWidth/2, 2));
-        let radiusLength = (Math.sin((45+elAngle)*Math.PI/180)*Math.sqrt(2)*elRadius-elRadius);
 
-        let betaAngle = Math.atan((elHeightDim/2)/(elWidth/2))*180/Math.PI;
-        let trigoLength = Math.cos((90-(elAngle+betaAngle))*Math.PI/180)*halfCrosslineLen - elHeightDim/2;
-        let tetiva = 2*halfCrosslineLen*Math.sin((elAngle/2)*Math.PI/180);
+        let halfCrosslineLen = Math.sqrt(Math.pow(elHeightDim/2, 2)+Math.pow(elWidth/2, 2));
+        let radiusLength = (Math.sin(toRad(45+(elAngle < 45 ? elAngle : 90-elAngle)))*Math.sqrt(2)*elRadius-elRadius);
+        let betaAngle = toDeg(Math.atan((elHeightDim/2)/(elWidth/2)));
+        let trigoLength = Math.cos(toRad(90-(elAngle+betaAngle)))*halfCrosslineLen - elHeightDim/2;
+        let tetiva = 2*halfCrosslineLen*Math.sin(toRad(elAngle/2));
         let diff = Math.sqrt(Math.pow(tetiva, 2) - Math.pow((trigoLength), 2));
         let afterFallPos = elLeft - diff;
+        let afterFallPosRight = elRight + diff;
 
         const acc = 9.8;
+        const pxToMet = 0.0002645833;
+        const metToPx = 3779.5275591;
         
         let currTime = 0;
         let currHeight = 0;
         let angle = elAngleFull;
-        let amp = 1;
-        let hiddenPart = trigoLength;
+        let amp = 0;
+        let angPerTime = 5;
+        let hiddenPart = trigoLength - radiusLength;
         let fallen = false;
+        let fixAfterFall = afterFallPos;
+        let firstDiff = diff;
 
         let fall = setInterval(function(){
             currHeight = elHeight - 0.5*acc*currTime*currTime;
             el.style.bottom = currHeight;
             currTime += 0.1;
-            if (currHeight < hiddenPart - radiusLength) {
-                el.style.rotate = 0+'deg';
-                el.style.bottom = 0;
-                el.style.left = afterFallPos;
-                el.style.transformOrigin = '100% 100%';
-                el.style.rotate = elAngle+'deg';
-                el.style.bottom = - radiusLength;
+            if (currHeight < hiddenPart) {
+                el.style.bottom = hiddenPart;
                 fallen = true;
                 clearInterval(fall);
             }
         },10)
         
-        let ratio = radiusLength/angle;
+        let intervalTime = 10;
         let rotate = setInterval(function(){
             if (fallen) {
+
                 if (angle > 0) {
-                    amp+=0.2;
-                    if (angle-amp < 0) {
+                    angPerTime-=0.016
+                    if (angPerTime < 0) {
+                        angPerTime = 0;
+                    }
+                    amp+=angPerTime;
+                    let actualAngle = angle - amp;
+                    if (actualAngle < 0 && !makeBall) {
                         el.style.rotate = 0+'deg';
                         el.style.bottom = 0;
                         return;
                     }
-                    angle -= amp;
-                    let up = (Math.sin((45+angle)*Math.PI/180)*Math.sqrt(2)*elRadius-elRadius);
-                    el.style.rotate = angle+'deg';
-                    el.style.bottom = -up;
+
+                    el.style.rotate = (actualAngle)+'deg';
+
+                    let dist = toRad(angPerTime)*elRadius*pxToMet*metToPx;
+                    
+                    trigoLength = Math.cos(toRad(90-(actualAngle+betaAngle)))*halfCrosslineLen - elHeightDim/2;
+                    tetiva = 2*halfCrosslineLen*Math.sin(toRad(actualAngle/2));
+                    diff = Math.sqrt(Math.pow(tetiva, 2) - Math.pow((trigoLength), 2));
+
+                    if (makeBall) {
+                         elLeft -= dist;
+                    } else {
+                        elLeft = afterFallPos + diff;
+                    }
+                    el.style.left = elLeft;
+
+                    radiusLength = (Math.sin(toRad(45+(actualAngle < 45 ? actualAngle : 90-actualAngle)))*Math.sqrt(2)*elRadius-elRadius);
+                    
+                    el.style.bottom = trigoLength - radiusLength;
                 }
             }
-        },10)
-    }
-
-    function getRatio (elAngle) {
-        for (let i = 0; i < 360/45; i++) {
-            if (elAngle >= i*45 && elAngle <= (i+1)*45) {
-                return ((i+1)*45-elAngle)/45;
-                break;
-            }
-        }
+        },intervalTime)
     }
 
     function getAngle (elAngle) {
@@ -174,6 +188,14 @@
             }
         }
         return angle;
+    }
+
+    function toDeg (angle) {
+        return (angle * 180)/Math.PI;
+    }
+
+    function toRad (angle) {
+        return (angle * Math.PI)/180;
     }
     
 </script>
