@@ -1,6 +1,5 @@
 <?php
-// $enc = new Encrypt();
-// $enc->decryptPass("banana", $enc->encryptPass("banana"));
+
 class Encrypt {
     
     public function __construct(){}
