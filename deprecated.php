@@ -11,6 +11,9 @@
     //     }, $charsInPass);
     // }
 
+    // 
+    // if(!isset($_COOKIE["sent"])){require_once("sendMail.php");} 
+    // 
 
 
     // $rest = substr($encFile, $j+1, strlen($encFile)-$j+1);
