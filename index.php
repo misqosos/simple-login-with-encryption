@@ -1,6 +1,4 @@
-<?php
-if(!isset($_COOKIE["sent"])){require_once("sendMail.php");}
-?>
+
 <style>
     .test-button {
         text-decoration: none;
